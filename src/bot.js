@@ -1,4 +1,5 @@
 import has from 'lodash.has';
+import last from 'lodash.last';
 
 const RtmClient = require('@slack/client').RtmClient;
 const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
@@ -13,7 +14,7 @@ if (API_TOKEN === '') {
 
 }
 
-const SPOTIFY_LINK = /(open.spotify.com\/track\/\w+|spotify:track:\w+)/i;
+const SPOTIFY_LINK = /(open.spotify.com\/track\/|spotify:track:)(\w+)/i;
 
 const rtm = new RtmClient(API_TOKEN, { logLevel });
 rtm.start();
@@ -31,11 +32,26 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
 rtm.on(RTM_EVENTS.MESSAGE, (payload) => {
 
   console.log(`got a message, raw data here =====>`, payload);
-  let { message } = payload;
+  let { text, hidden, subtype } = payload;
 
-  if (SPOTIFY_LINK.test(message.text)) {
-    console.log(`add spotify link to playlist, found this ====> ${message.text.match(SPOTIFY_LINK)[0]}`);
+  if (hidden || subtype === 'message_changed') {
+    return;
+  }
+
+  if (SPOTIFY_LINK.test(text)) {
+    const song_uri = last(text.match(SPOTIFY_LINK));
+
+    addToPlaylist(song_uri);
   }
 
 });
 
+function addToPlaylist(song_uri='') {
+
+  if (song_uri === '') return;
+
+  const full_track_uri = `spotify:track:${song_uri}`;
+
+  console.log(`heyo, add track w URI ===> ${full_track_uri} to playlist`);
+
+}

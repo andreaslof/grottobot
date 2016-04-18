@@ -4,3 +4,4 @@ require('babel-register')({ extensions: ['.js'] });
 require('dotenv').config();
 
 require('./src/bot');
+require('./src/spotify');
