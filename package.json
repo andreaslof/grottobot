@@ -1,7 +1,7 @@
 {
   "name": "grottobot",
-  "version": "0.0.1",
-  "description": "a useless/full bot for automagically adding spotify tracks to a collaborative playlist",
+  "version": "1.0.0",
+  "description": "a useless/full bot for automagically adding spotify tracks to a spotify playlist",
   "main": "index.js",
   "scripts": {
     "dev": "forever --watch index.js",
