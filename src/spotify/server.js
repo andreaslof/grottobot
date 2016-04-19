@@ -1,6 +1,5 @@
 import fs from 'fs';
 import express from 'express';
-import { renderFile } from 'ejs';
 import SpotifyWebApi from 'spotify-web-api-node';
 
 import routes from './routes';
