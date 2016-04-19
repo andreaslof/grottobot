@@ -1,5 +1,6 @@
 import has from 'lodash.has';
 import last from 'lodash.last';
+import addToPlaylist from './spotify/addToPlaylist';
 
 const RtmClient = require('@slack/client').RtmClient;
 const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
@@ -21,8 +22,6 @@ rtm.start();
 
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
 
-  console.log(`data from RTM ====> `, rtmStartData);
-
   if (rtmStartData.ok) {
     console.log(`auth succeeded, here's the grottobot!`);
   }
@@ -32,7 +31,7 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
 rtm.on(RTM_EVENTS.MESSAGE, (payload) => {
 
   console.log(`got a message, raw data here =====>`, payload);
-  let { text, hidden, subtype } = payload;
+  let { channel, user, text, hidden, subtype } = payload;
 
   if (hidden || subtype === 'message_changed') {
     return;
@@ -41,17 +40,12 @@ rtm.on(RTM_EVENTS.MESSAGE, (payload) => {
   if (SPOTIFY_LINK.test(text)) {
     const song_uri = last(text.match(SPOTIFY_LINK));
 
-    addToPlaylist(song_uri);
+    addToPlaylist(song_uri).then((res) => {
+      rtm.sendMessage(`thanks <@${user}>, i've added that track`, channel);
+    }).catch((err) => {
+      console.error(err);
+      rtm.sendMessage(`uh oh, something went wrong… try again!`, channel);
+    });
   }
 
 });
-
-function addToPlaylist(song_uri='') {
-
-  if (song_uri === '') return;
-
-  const full_track_uri = `spotify:track:${song_uri}`;
-
-  console.log(`heyo, add track w URI ===> ${full_track_uri} to playlist`);
-
-}
