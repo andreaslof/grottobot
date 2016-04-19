@@ -23,7 +23,7 @@ rtm.start();
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
 
   if (rtmStartData.ok) {
-    console.log(`auth succeeded, here's the grottobot!`);
+    console.log(`auth succeeded, grottobot is alive!`);
   }
 
 });
@@ -41,6 +41,7 @@ rtm.on(RTM_EVENTS.MESSAGE, (payload) => {
     const song_uri = last(text.match(SPOTIFY_LINK));
 
     addToPlaylist(song_uri).then((res) => {
+      console.log(res);
       rtm.sendMessage(`thanks <@${user}>, i've added that track`, channel);
     }).catch((err) => {
       console.error(err);
