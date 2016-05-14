@@ -1,4 +1,38 @@
-import { spotifyApi } from './server';
+import { spotifyApi, writeAuthFile } from './server';
+
+function probeAuth () {
+
+  return new Promise((resolve, reject) => {
+
+    spotifyApi.getMe()
+      .then((user) => {
+
+        resolve();
+
+      }, (err) => {
+
+        const { statusCode, message } = err;
+
+        if (statusCode === 401) {
+          spotifyApi.refreshAccessToken()
+            .then((data) => {
+              console.log(`auth refresh, data ===>`, data);
+
+              let { body } = data;
+
+              body['refresh_token'] = spotifyApi.getRefreshToken();
+              spotifyApi.setAccessToken(body.access_token);
+
+              writeAuthFile(body)
+                .then(() => resolve());
+            }, (err) => {
+              console.log(`auth refresh failed?`, err);
+            });
+        }
+      });
+  });
+
+}
 
 function addToPlaylist (songURI='') {
 
@@ -10,12 +44,18 @@ function addToPlaylist (songURI='') {
 
   return new Promise((resolve, reject) => {
 
-    spotifyApi.addTracksToPlaylist(user, playlistId, [fullTrackURI])
-      .then((data) => {
-        resolve(data);
-      }, (err) => {
-        reject(err);
-      });
+    probeAuth().then(() => {
+      spotifyApi.addTracksToPlaylist(user, playlistId, [fullTrackURI])
+        .then((data) => {
+
+          resolve(data);
+
+        }, (err) => {
+
+          reject(err);
+
+        });
+    });
 
   });
 

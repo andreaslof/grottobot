@@ -18,11 +18,30 @@ const app = express();
 const spotifyApi = new SpotifyWebApi({ clientId, clientSecret });
 
 try {
-  const spotAuth = JSON.parse(fs.readFileSync(`./.spotauth`));
+  const spotAuth = JSON.parse(fs.readFileSync(`${process.cwd()}/.spotauth`));
 
   spotifyApi.setAccessToken(spotAuth.access_token);
   spotifyApi.setRefreshToken(spotAuth.refresh_token);
 } catch(e) {
+}
+
+function writeAuthFile (data) {
+
+  const authFile = `${process.cwd()}/.spotauth`;
+  data = JSON.stringify(data);
+  console.log(data);
+
+  return new Promise((resolve, reject) => {
+    fs.writeFile(authFile, data, (err) => {
+
+      if (err) {
+        console.error(`write file failed`, err);
+        reject(err);
+      }
+
+      resolve();
+    });
+  });
 }
 
 app.set('x-powered-by', false);
@@ -42,21 +61,20 @@ app.use((req, res, next) => {
 app.use(redirectUri, (req, res, next) => {
 
   const { code, state } = req.query;
-  const authFile = `${process.cwd()}/.spotauth`;
 
   spotifyApi.authorizationCodeGrant(code)
     .then((authData) => {
 
-      fs.writeFile(authFile, JSON.stringify(authData.body), (err) => {
+      writeAuthFile(authData.body)
+        .then(() => {
 
-        if (err) {
-          console.error(err);
-          res.redirect(`/auth`);
-        }
+          res.redirect(`/?auth=done`);
 
-        res.redirect(`/?auth=done`);
+        }, (err) => {
 
-      });
+          res.redirect(`/auth`)
+
+        });
 
     }, (err) => {
 
@@ -69,4 +87,4 @@ app.use(redirectUri, (req, res, next) => {
 routes(app);
 
 export default app;
-export { spotifyApi }
+export { spotifyApi, writeAuthFile }
